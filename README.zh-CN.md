@@ -146,7 +146,7 @@ harness-check/
 
 <br>
 
-**Zane456** —— agent 框架与 Claude Code skill 作者 · 代表作 [clear-chinese](https://github.com/Zane456/clear-chinese)
+**Zane456**
 
 | 平台 | 链接 |
 | :--- | :--- |

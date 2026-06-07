@@ -147,7 +147,7 @@ harness-check/
 
 <br>
 
-**Zane456** — builder of agent harnesses & Claude Code skills · author of [clear-chinese](https://github.com/Zane456/clear-chinese)
+**Zane456**
 
 | Platform | Link |
 | :--- | :--- |
