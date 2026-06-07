@@ -1,4 +1,4 @@
-English | [简体中文](README.zh-CN.md)
+[English](README.md) | [简体中文](README.zh-CN.md)
 
 <div align="center">
 
@@ -11,9 +11,9 @@ English | [简体中文](README.zh-CN.md)
 > *"Docs describe one system. Code runs another. Find the gap before your users do."*
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platform: Claude Code](https://img.shields.io/badge/Platform-Claude%20Code-blueviolet.svg)]()
-[![Type: Agent Skill](https://img.shields.io/badge/Type-Agent%20Skill-blue.svg)]()
-[![Failure patterns: 24](https://img.shields.io/badge/Failure%20patterns-24-brightgreen.svg)]()
+[![Platform: Claude Code](https://img.shields.io/badge/Platform-Claude%20Code-blueviolet.svg)](https://claude.com/claude-code)
+![Type: Agent Skill](https://img.shields.io/badge/Type-Agent%20Skill-blue.svg)
+![Failure patterns: 24](https://img.shields.io/badge/Failure%20patterns-24-brightgreen.svg)
 
 <br>
 
@@ -21,7 +21,7 @@ English | [简体中文](README.zh-CN.md)
 
 <br>
 
-harness-check audits agent frameworks wired together from prompts, markdown, and scripts. It hunts the *glue* — a trigger word, role discovery, a registry, a symlink, a script seam — where one quiet break kills a whole chain while the docs still claim full functionality. It verifies every finding against your real files (no guessing), and reports in plain before/after behavior — not a wall of line numbers.
+harness-check audits agent frameworks wired together from prompts, Markdown, and scripts. It hunts the *glue* — a trigger word, role discovery, a registry, a symlink, a script seam. Where one quiet break kills a whole chain while the docs still claim full functionality. It verifies every finding against your real files (no guessing), and reports findings as plain-language before/after comparisons — not a wall of line numbers.
 
 <br>
 
@@ -58,7 +58,7 @@ CODE LAYER  (the audit trail, skippable)
   N3 scenario count off by one         won't change automatically)
 ```
 
-It doesn't bury you in line numbers. It tells you **what silently breaks, what's safe to fix right now, and what needs your call** — because an LLM wrote the harness and you don't read its code anyway.
+It doesn't bury you in line numbers. It tells you **what silently breaks, what's safe to fix right now, and what needs your call** — because when an LLM wrote the harness, you need a second pair of eyes.
 
 ---
 
@@ -89,7 +89,7 @@ Four dimensions, **24 catalogued failure patterns**, each paired with a concrete
 | **1 · System architecture** | Two disconnected execution paths wearing one name; docs that promise what the running path doesn't deliver; "drop a file and it works" that secretly needs a script edit. |
 | **2 · Trigger reliability** | A discovery glob that misses subdirectories → empty registry; dead symlinks; a roster name that ≠ the dispatcher's name → lookup 404s; a forced `Skill(X)` pointing at an undiscoverable X. |
 | **3 · Execution reliability** | State/recursion bugs; script-config seams that don't match; `2>/dev/null \|\| true` swallowing a critical failure; a loop cap that truncates silently; shared resources with no lock. |
-| **4 · Declared vs wired** | Paper features the code never implements; a health-check that validates the wrong field (green ✓ ≠ runnable); empty dirs, hardcoded paths, a dependency that exists only as `.example`. |
+| **4 · Declared vs wired** | Documented features the code never implements; a health-check that validates the wrong field (green ✓ ≠ runnable); empty dirs, hardcoded paths, a dependency that exists only as `.example`. |
 
 Full pattern catalogue with per-pattern verification: [`references/failure-patterns.md`](references/failure-patterns.md).
 
@@ -106,8 +106,8 @@ Six steps. Each prints a visible `[harness-check] …` line so no step is silent
 **0. Discovery first** — the lifeline: can roles/skills/tools actually be found and invoked? Globs, symlinks, registry completeness, name consistency.
 **1. Inventory** — read everything (config, rules, roster, role defs, scripts) before judging anything.
 **2. Scan** — four dimensions against the 24-pattern catalogue.
-**3. Verify** — the iron rule: *no verification, no finding.* Anything unprovable on disk is downgraded to "suspected" or dropped.
-**4. Report** — verdict → health scores → code-layer evidence → **✅ Safe to fix now** / **🤔 Needs your decision** → top failure scenarios.
+**3. Verify** — the iron rule: *no verification, no finding.* Anything unverifiable on disk is downgraded to "suspected" or dropped.
+**4. Report** — verdict, health scores, and code-layer evidence; then the **✅ Safe to fix now** / **🤔 Needs your decision** split, plus top failure scenarios.
 **5. Self-check** — every file assessed, every finding verified, every `where` carries a `file:line`.
 
 ---
@@ -116,12 +116,12 @@ Six steps. Each prints a visible `[harness-check] …` line so no step is silent
 
 | | Most "reviews" | harness-check |
 | :--- | :--- | :--- |
-| **Target** | business-logic correctness, security | whether the framework *runs as wired* |
+| **Target** | business-logic correctness and security | whether the framework *runs as wired* |
 | **Evidence** | plausible inference | verified on your real files, or dropped |
-| **Fix advice** | "here's the bug" | severity **and** fix-risk (🟢 safe now / 🟡 / 🔴 may break a running path) |
+| **Fix advice** | "here's the bug" | severity **and** fix-risk (🟢 safe now / 🟡 use caution / 🔴 may break a running path) |
 | **Report voice** | file:line everywhere | before/after behavior — what changes, how risky |
 
-**Out of scope (on purpose):** secret leaks, business-logic correctness, performance profiling — they distract from the one question, *can the framework run.*
+**Out of scope (on purpose):** secret leaks, business-logic correctness, performance profiling — they distract from the one question: *can the framework run?*
 
 ---
 
