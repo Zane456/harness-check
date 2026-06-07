@@ -99,13 +99,8 @@ Full pattern catalogue with per-pattern verification: [`references/failure-patte
 
 Six steps. Each prints a visible `[harness-check] …` line so no step is silently skipped.
 
-```mermaid
-graph LR
-    A[Step 0<br/>Discovery check] --> B[Step 1<br/>Inventory]
-    B --> C[Step 2<br/>4-dim scan]
-    C --> D[Step 3<br/>On-disk verify]
-    D --> E[Step 4<br/>Layered report]
-    E --> F[Step 5<br/>Self-check]
+```
+0 Discovery ─▶ 1 Inventory ─▶ 2 Scan (4 dims) ─▶ 3 Verify ─▶ 4 Report ─▶ 5 Self-check
 ```
 
 **0. Discovery first** — the lifeline: can roles/skills/tools actually be found and invoked? Globs, symlinks, registry completeness, name consistency.

@@ -98,13 +98,8 @@ git clone https://github.com/Zane456/harness-check.git ~/.claude/skills/harness-
 
 六步。每步打一行可见的 `[harness-check] …`，确保没有哪步被静默跳过。
 
-```mermaid
-graph LR
-    A[第0步<br/>发现机制实测] --> B[第1步<br/>机械盘点]
-    B --> C[第2步<br/>四维扫描]
-    C --> D[第3步<br/>磁盘实测验证]
-    D --> E[第4步<br/>分层报告]
-    E --> F[第5步<br/>自检]
+```
+0 发现机制 ─▶ 1 机械盘点 ─▶ 2 四维扫描 ─▶ 3 实测验证 ─▶ 4 输出报告 ─▶ 5 自检
 ```
 
 **0. 发现机制最先验** —— 框架活不活的命门：角色/skill/工具到底能不能被发现、被调起？查 glob、软链、清单完整性、命名一致性。
