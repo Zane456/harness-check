@@ -107,7 +107,7 @@ Six steps. Each prints a visible `[harness-check] …` line so no step is silent
 **1. Inventory** — read everything (config, rules, roster, role defs, scripts) before judging anything.
 **2. Scan** — four dimensions against the 24-pattern catalogue.
 **3. Verify** — the iron rule: *no verification, no finding.* Anything unverifiable on disk is downgraded to "suspected" or dropped.
-**4. Report** — verdict, health scores, and code-layer evidence; then the **✅ Safe to fix now** / **🤔 Needs your decision** split, plus top failure scenarios.
+**4. Report** — verdict, health scores, and code-layer evidence; then the **✅ Safe to fix now** / **🤔 Needs your decision** split, with the top trigger- and execution-reliability silent-break scenarios folded into those items. Written compact (lesstoken), behavior-first.
 **5. Self-check** — every file assessed, every finding verified, every `where` carries a `file:line`.
 
 ---

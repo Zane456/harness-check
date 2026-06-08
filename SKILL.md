@@ -45,10 +45,10 @@ Every candidate finding must be verified in the files yourself — does the glob
 print: `[harness-check] verify: confirmed=<N> downgraded/dropped=<M>`
 
 ### Step 4 · Output report
-Present per **references/output-format.md** — a layered report: verdict → health scores → a code-layer evidence block → a decision layer that speaks in effect + risk (not file:line), split into **✅ Safe to fix now** vs **🤔 Needs your decision**. Actionable parts go last (terminal streaming → bottom is most visible). The bullets below are the substance that fills those layers.
+Present per **references/output-format.md** — a layered report written in **lesstoken style** (ultra-compressed; file:line / IDs / code / errors kept exact): verdict → health scores → a code-layer evidence block → a decision layer that speaks in effect + risk (not file:line), split into **✅ Safe to fix now** vs **🤔 Needs your decision**, with the two silent-break scenarios folded into those items. Actionable parts go last (terminal streaming → bottom is most visible). The bullets below are the substance that fills those layers.
 - Findings ranked **XHigh / High / Medium / Low**, IDed X#/H#/M#/L#, each: what / where (file:line) / why / concrete fix, tagged with dimension; the decision layer points back via (Code layer: <ID>)
 - **Fix recommendations in three risk tiers** (🟢 low-risk repair-only / 🟡 medium / 🔴 high), per `references/fix-risk-tiers.md`. Lead with 🟢 the user can apply safely; never present a 🔴 as one-click — it may break a currently-working path. Severity ≠ risk tier (an XHigh often has a 🟢 fix).
-- Two focus sections: **top trigger-reliability** + **top execution-reliability** failure scenarios
+- **Top trigger-reliability** + **top execution-reliability** silent-break scenarios — fold each as a one-line `silent-break:` into the ✅/🤔 decision item it belongs to, NOT a standalone trailing section
 - **Self-assessment table**: score the 4 dimensions 1-5 + one line on coverage blind spots
 
 ### Step 5 · Self-check (if a box fails, go back and fill it)
@@ -71,4 +71,4 @@ Security/secret leaks, business-logic correctness, performance profiling — exp
 ## Reference
 - **references/failure-patterns.md** — per-dimension failure patterns + how to verify each on disk. Consult by dimension in Steps 2–3.
 - **references/fix-risk-tiers.md** — how to classify each fix 🟢/🟡/🔴 by risk to working behavior. Use in Step 4.
-- **references/output-format.md** — the layered report shape: verdict → health scores → code-layer evidence → decision layer (✅ Safe to fix now / 🤔 Needs your decision) that speaks effect+risk, not code, with actionable parts last. Use in Step 4 to lay out the report.
+- **references/output-format.md** — the layered report shape, written lesstoken/compressed: verdict → health scores → code-layer evidence → decision layer (✅ Safe to fix now / 🤔 Needs your decision) that speaks effect+risk, not code, with the two silent-break scenarios folded into those items and actionable parts last. Use in Step 4 to lay out the report.
