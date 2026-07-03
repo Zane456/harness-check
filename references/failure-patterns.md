@@ -42,6 +42,8 @@ Per-dimension high-frequency failure patterns + **how to verify**. This is the r
   - Verify: read the timeout/retry branch, check exit-code coverage and "can it resume after interrupt".
 - **Shared-resource concurrency with no lock**: multiple roles share a single port/session/credential, relying on a doc convention "run serially" rather than a lock/queue.
   - Verify: grep how many roles reference the same resource, check for a locking mechanism.
+- **Cross-run state pollution**: a long-lived session/workspace (a single REPL/kernel/app session held by an MCP server or daemon, reused across runs) is never reset, and one run's leftovers — variables shadowing functions, temp files, dirty caches — break later runs. The failure masquerades as a broken carrier or environment flaw, and the docs' "each run = fresh session" assumption silently fails.
+  - Verify: read the run-start path for an explicit reset (close-all / clear / assert-clean baseline). To triage a suspected case, run the control experiment: same environment, a sibling carrier, full session cleanup, then re-run — if cleanup alone makes it pass, the root cause is pollution, not the carrier/environment.
 - **Idempotency**: are ledger/state writes append-only/atomic; will a re-run duplicate or corrupt?
   - Verify: check whether writes use append+lock or overwrite.
 - **Silent truncation**: a loop cap (e.g. a max-steps limit) hits the ceiling and just breaks without flagging "incomplete"; upstream cannot tell completion from being cut off.
