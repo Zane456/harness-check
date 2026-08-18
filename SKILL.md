@@ -5,67 +5,73 @@ description: Agent harness/多代理框架结构体检。用户点名「harness 
 
 # Harness Check — Agent Framework Structure Audit
 
-You audit whether **the framework runs reliably as wired** — not business-code correctness, not security. Core stance: **does "the system the docs describe" equal "the system the code can actually run"?** A multi-agent harness's most common disease is these two quietly diverging.
+You audit whether **the framework runs reliably as wired**. Core stance: **does "the system the docs describe" equal "the system the code can actually run"?**
 
-One broken glue point — a trigger word, role discovery, a registry, a symlink, a script seam — silently kills a chain while the docs still claim full functionality. The audit surfaces what makes a harness "demo-works, production-fails".
+One broken glue point (a trigger, a registry, a symlink, a script seam) silently kills a chain while docs claim full functionality.
 
-This is a **generic** audit — assume no specific project layout, role names, or scripts. Establish the target root first (user-given path, or cwd).
+Generic audit — assume no specific layout, role names, or scripts. Establish the target root first (user path or cwd).
 
-## Five-step flow (each step MUST print one `[harness-check] …` line)
+## Flow (each step MUST print one `[harness-check] …` line)
 
-> A step with no visible output gets silently skipped. One line per step; a missing print = step not done.
+> No visible output = silently skipped; a missing print = step not done.
+> **Self-review flag**: this session already edited the audited harness → prefix every print with `[self-review]`, and a fresh sub-agent blind re-audit (target root, NO expected findings) MUST run before declaring done; print `[harness-check] self-review re-check: <agent> → <verdict>`. Cannot run → mark **unverified**, never silently.
 
-### Step 0 · Discovery-mechanism reality check (the lifeline — verify first)
-A harness is only alive if roles/skills/tools can actually be discovered and invoked. Verify up front:
-- **Discovery glob coverage**: does a glob used to find roles/agents (e.g. single-level `*.md`) miss subdirectories → registry/roster comes back empty?
-- **Symlink resolvability**: `find <root> -type l ! -exec test -e {} \; -print` to catch dead links.
-- **Registry completeness**: any hardcoded member/role list ≟ the actual set on disk.
-- **Naming consistency**: name in the roster ≟ name used by the dispatcher/launcher (mismatch → lookup fails).
-- **Forced-trigger targets exist**: for any "you must use Skill/tool X" injected into a role, is X actually discoverable from that role's working dir or globally?
+### Step 0 · Discovery reality check (the lifeline)
+**Run this skill's `scripts/check_discovery.py <root>` first** — dead symlinks, glob coverage, name inventory. Cite its lines — script lines = leads, YOU verify (can't run → by hand, say so; exit 2 = bad root, fix the root, don't fall back). Then judge:
+- **Registry completeness** — hardcoded member/role lists ≟ the set on disk (vs its inventory).
+- **Naming consistency** — roster ≟ dispatcher/launcher name (mismatch → lookup fails).
+- **Forced-trigger targets** — every injected "must use Skill/tool X" resolves from the role's working dir or globally.
 
-print: `[harness-check] discovery: glob=<ok/misses-subdir> dead-links=<n> registry=<full/missing X> naming=<ok/mismatch> forced-skill=<resolvable/N broken>`
+print: `[harness-check] discovery: glob=<ok/misses/skill-pkg/none> dead-links=<n> registry=<full/missing N> naming=<ok/mismatch> forced=<ok/N broken>`
 
-### Step 1 · Mechanical inventory (read everything before judging; miss nothing)
-ls/read first, judge later. Read all: root agent-config (CLAUDE.md/AGENTS.md/README), rules/charter, roster/org tables, every role/agent definition, templates, scripts, the orchestration/command/skill dirs, config, lock files. Produce an internal file checklist marking each [assessed / to-fix / no-change].
+### Step 1 · Mechanical inventory (miss nothing)
+ls/read first, judge later — root agent-config (CLAUDE.md/AGENTS.md/README), rules/charter, rosters, every role definition, templates, scripts, orchestration/command/skill dirs, configs, locks. Checklist every file [assessed / to-fix / no-change]; reconcile the count against check-discovery's `files-walked` line, name what you skipped.
 
-print: `[harness-check] inventory: read <N> files, coverage checklist built`
+print: `[harness-check] inventory: read <N>/<files-walked>, marks a/f/n=<a>/<f>/<n>`
 
 ### Step 2 · Four-dimension scan
-Scan each dimension; details and known failure patterns are in [references/failure-patterns.md](references/failure-patterns.md). Tag every finding with the dimension it hits:
-1. **System architecture** — multiple disconnected execution paths, docs≟code, over-layering
-2. **Trigger reliability** — trigger-word/routing clarity, missed/false triggers, discovery hits (from Step 0)
-3. **Execution reliability** — orchestration/state flow/recursion, script-config seams, failure/timeout/interrupt recovery, concurrency, idempotency, silent truncation/error-swallowing
-4. **Declared vs wired** — are declared features actually wired, paper features, whether the health-check validates the field that actually drives behavior
+**Run `scripts/check_mechanical.py <root>`** — the mechanical slice of dims 3/4 (swallow/empty/hardcoded/example-only). It reports hits, YOU convict — a `|| true` can be legitimate (can't run → by hand, say so). Then walk EVERY pattern in [references/failure-patterns.md](references/failure-patterns.md); tag each finding with its dimension:
+1. **System architecture** — disconnected execution paths, docs≟code, over-layering
+2. **Trigger reliability** — routing clarity, missed/false triggers, discovery hits (Step 0)
+3. **Execution reliability** — state flow/recursion, script-config seams, recovery, concurrency, idempotency, silent truncation/swallowing
+4. **Declared vs wired** — paper features, health-check validating the wrong field
 
-print: `[harness-check] scan: candidate findings=<N> (by dim 1/2/3/4=…)`
+print: `[harness-check] scan: patterns=<p>/<total> mech-hits=<H> findings=<N> (dim 1/2/3/4=…)`
 
-### Step 3 · On-disk verification (iron rule: no verification, no finding)
-Every candidate finding must be verified in the files yourself — does the glob really match, is the symlink really dead, is the registry really short, is the field really inconsistent. Downgrade what you cannot verify to "suspected" or drop it. Never report inference as a conclusion.
+### Step 2.5 · End-to-end walkthrough (positive once, negative always)
+Per [references/walkthrough.md](references/walkthrough.md). Positive: walk ONE typical task through the real chain on disk — trigger → dispatch → execution → reporting; an unconnected link = candidate finding; no orchestration → skip positive, say so. Negative ALWAYS: judge 1–2 should-NOT-trigger tasks against the always-on rules; false-fire = dim2 finding.
+
+print: `[harness-check] walkthrough: <"task" links ok=<n> broken=<m> | positive=skipped (no orchestration)>; negative false-fire=<k>/<j>`
+
+### Step 3 · On-disk verification (no verification, no finding)
+Verify every candidate finding in the files yourself — glob really matches? field really inconsistent? Unverifiable → downgrade to "suspected" or drop; never report inference as conclusion.
 
 print: `[harness-check] verify: confirmed=<N> downgraded/dropped=<M>`
 
 ### Step 4 · Output report
-Present per [references/output-format.md](references/output-format.md) — layered, lesstoken-compressed: verdict → health scores → code-layer evidence → decision layer (**✅ Safe to fix now** vs **🤔 Needs your decision**, spoken in effect + risk, not file:line), actionable parts last (terminal streaming → bottom is most visible). The bullets below are the substance that fills those layers.
-- Findings ranked **XHigh / High / Medium / Low**, IDed X#/H#/M#/L#, each: what / where (file:line) / why / concrete fix, tagged with dimension; the decision layer points back via (Code layer: <ID>)
-- **Fix recommendations in three risk tiers** (🟢 low-risk repair-only / 🟡 medium / 🔴 high), per [references/fix-risk-tiers.md](references/fix-risk-tiers.md). Lead with 🟢 the user can apply safely; never present a 🔴 as one-click. Severity ≠ risk tier (an XHigh often has a 🟢 fix).
-- Each 🤔 item separates the **mechanism** (how it works now) from the **consequence** it causes; a silent break (an action → break with no error) is named in the consequence line — no separate section
-- **Self-assessment table**: score the 4 dimensions 1-5 + one line on coverage blind spots
+Present per [references/output-format.md](references/output-format.md) — layered, lesstoken: verdict → health scores (4 dims 1–5 + blind spots) → Code layer (ranked **XHigh/High/Medium/Low**, IDs X#/H#/M#/L#, file:line, dim tag) → decision layer **✅ Safe to fix now** vs **🤔 Needs your decision** (mechanism vs consequence, back-pointer (Code layer: <ID>)). Risk tiers 🟢/🟡/🔴 per [references/fix-risk-tiers.md](references/fix-risk-tiers.md); severity ≠ risk tier. Same defect from two dims = ONE finding, both tags.
 
-print: `[harness-check] report: findings X#/H#/M#/L#=…, decision ✅=<n> 🤔=<n>`
+print: `[harness-check] report: fmt-ref✓ findings X#/H#/M#/L#=…, decision ✅=<n> 🤔=<n>`
 
-### Step 5 · Self-check (if a box fails, go back and fill it)
-- [ ] every file in the Step 1 checklist is marked [assessed/to-fix/no-change]
-- [ ] every finding was verified on disk, none is pure inference
-- [ ] every declared skill/role/feature was checked for whether it is wired
-- [ ] every `where` gives file:line, no vagueness
-- [ ] the self-assessment table honestly notes blind spots
+### Step 5 · Self-check (a failed box → go refill)
+- [ ] every Step 1 checklist file is marked
+- [ ] every finding verified on disk with file:line, none pure inference
+- [ ] every declared skill/role/feature checked for being wired
+- [ ] scripts ran and cited (or fallback announced); walkthrough ran or skip printed
+- [ ] every step's print line was emitted
+- [ ] the health-scores table honestly notes blind spots
 
-print: `[harness-check] self-check: <all pass / N to refill>`
+print: `[harness-check] self-check: <✓/✗ per box → all pass | refill #k>`
+
+### Step 6 · Apply (only on the user's explicit go)
+**Never** edit without confirmation. Default-apply 🟢 only; each 🟡/🔴 needs its own decision. Close the loop per [references/fix-risk-tiers.md](references/fix-risk-tiers.md) §Apply protocol — re-run both scripts + re-verify each fix on disk; skipped re-check = unverified.
+
+print: `[harness-check] applied: <n> fixes; re-run discovery=<…> mechanical=<…>`
 
 ## Special cases
-- **Framework not yet built / no orchestration script**: only trigger words and role definitions are auditable — say "execution-reliability dimension has insufficient data", don't manufacture findings.
-- **Insufficient info**: unreadable files / un-runnable checks go into the blind spots, not inference.
-- **Trade-offs needing the user's call**: list the options, don't decide unilaterally.
+- **No orchestration yet**: only triggers and role definitions auditable — say "dim3 insufficient data", don't manufacture findings.
+- **Insufficient info**: unreadable/un-runnable → blind spots, not inference.
+- **User-call trade-offs**: list options, don't decide unilaterally.
 
 ## Out of scope
-Security/secret leaks, business-logic correctness, performance profiling — explicitly not checked; they distract from "can the framework run".
+Security/secret leaks, business-logic correctness, performance profiling — explicitly not checked.

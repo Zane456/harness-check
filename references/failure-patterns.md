@@ -2,6 +2,8 @@
 
 Per-dimension high-frequency failure patterns + **how to verify**. This is the reference table for the scan (SKILL Step 2) and on-disk verification (Step 3) — not rigid rules. A hit must land on a concrete `file:line`; downgrade anything you cannot verify. Patterns are generic across harnesses; the file/identifier names below are illustrative, not assumed to exist.
 
+The purely mechanical slice of dims 3/4 — error swallowing, empty dirs/configs, hardcoded paths, example-only deps — is measured by `scripts/check_mechanical.py`; cite its lines instead of re-grepping by eye, then convict each hit in context (the script measures, it never judges legitimacy).
+
 ---
 
 ## 1. System architecture
@@ -24,7 +26,7 @@ Per-dimension high-frequency failure patterns + **how to verify**. This is the r
 - **Discovery dir empty or missing links**: the platform discovers resources per working-dir, but the dir holds only a placeholder → all that role's per-project resources are inert.
   - Verify: list each role's discovery dir; an empty/placeholder-only dir = broken.
 - **Dead links**: a resource a doc claims is "installed" points (via symlink/path) to a target that does not exist.
-  - Verify: `find <root> -type l ! -exec test -e {} \; -print`, or resolve each referenced path.
+  - Verify: cite check_discovery's dead-symlinks lines; resolve doc-referenced paths yourself (fallback when the script can't run: `find <root> -type l ! -exec test -e {} \; -print`).
 - **Naming mismatch → lookup fails**: the role name in the roster ≠ the name used by the dispatcher/launcher → upstream lookup-by-name 404s.
   - Verify: cross-grep the same role's spelling across roster vs launch config vs scripts.
 - **Decision rules overloaded → trigger dilution**: the always-on config's rules for "what to delegate / what to do myself" cross-reference heavily and use subjective, non-machine-decidable thresholds → the model re-derives every turn, easily over-delegating or under-triggering.
@@ -49,7 +51,7 @@ Per-dimension high-frequency failure patterns + **how to verify**. This is the r
 - **Silent truncation**: a loop cap (e.g. a max-steps limit) hits the ceiling and just breaks without flagging "incomplete"; upstream cannot tell completion from being cut off.
   - Verify: read the loop-cap branch, check whether hitting the ceiling reports explicitly.
 - **Silent error swallowing**: a critical step uses `2>/dev/null || true`, swallowing failures (e.g. a ledger write fails with no warning).
-  - Verify: grep `2>/dev/null`, `|| true`; see whether the swallowed step is critical.
+  - Verify: cite check_mechanical's swallow hits, judge whether the swallowed step is critical (by-hand grep only as fallback).
 - **Double-execution bug**: the same action is invoked twice by a script, the second overwriting the first's output or carrying an unrelated hardcoded prompt.
   - Verify: read the script branches, see whether the same output target is redirected more than once.
 
@@ -60,8 +62,8 @@ Per-dimension high-frequency failure patterns + **how to verify**. This is the r
 - **Health-check validates the wrong field**: the check script validates a declarative field (e.g. a frontmatter `model`) while the field that actually drives behavior is something else (an env var / cwd / skill discoverability) → a green check ≠ actually runnable.
   - Verify: read the check script's assertions ≟ the fields that actually affect runtime.
 - **Empty dir / empty config**: a placeholder dir / empty json treated as a ready capability.
-  - Verify: `find -empty`, `wc -c` on config files.
+  - Verify: cite check_mechanical's empty lines (fallback: `find -empty`, `wc -c`).
 - **Hardcoded paths**: scripts/config hardcode absolute paths or leftover residue from another project (e.g. unrelated permissions in a local settings file).
-  - Verify: grep for absolute paths, cross-project names.
+  - Verify: cite check_mechanical's hardcoded hits; cross-project names are NOT scripted — grep those by hand.
 - **Missing dependency**: a declared MCP/tool/flow-script that exists only as a `.example` or not at all.
-  - Verify: cross-check declared dependencies against actual file existence.
+  - Verify: cite check_mechanical's example-only lines; non-.example declared deps (MCP servers, flow scripts) are NOT scripted — cross-check those against file existence yourself.

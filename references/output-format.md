@@ -39,6 +39,9 @@ fix sequence where fragment order could be misread — write those in normal pro
 1. **Verdict** — one line: is the main/everyday path healthy, which 1–2 buckets the problems
    fall in.
 2. **Health scores** — the 4-dimension table (1–5) + a one-line **Blind spots** note.
+   Anchor the scale (same anchors every run): **5** = verified clean · **4** = minor findings,
+   no silent break · **3** = runs, but carries a silent-break risk · **2** = a chain is broken ·
+   **1** = the dimension's main path is dead.
 3. **Code layer** — the evidence/audit trail. Header is exactly **Code layer** (or **代码层**
    in a Chinese report), no parenthetical. Never drop it — it is why the verdict is trustworthy.
 4. **✅ Safe to fix now** — pure fixes.
@@ -50,6 +53,12 @@ fix sequence where fragment order could be misread — write those in normal pro
 Findings ranked **XHigh / High / Medium / Low**, grouped under those headers. Each gets a
 stable ID = severity initial + number: **X# / H# / M# / L#** (Low = L; M is Medium). This ID is
 the cross-reference anchor the decision layer points to.
+
+Severity rubric (place by asking "what happens on the next real run?"):
+- **XHigh** — a main/everyday path is dead or silently produces wrong results
+- **High** — a whole chain/role/feature silently broken, main path still works
+- **Medium** — degraded or latent: breaks under a plausible condition (concurrency, re-run, edge input)
+- **Low** — cosmetic/doc drift; no behavior change today
 
 The fix-risk circle 🟢/🟡/🔴 goes **first**, then ID, plain name, dimension; sub-lines below,
 lesstoken (facts kept, prose cut):

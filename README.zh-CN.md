@@ -13,7 +13,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Platform: Claude Code](https://img.shields.io/badge/Platform-Claude%20Code-blueviolet.svg)]()
 [![Type: Agent Skill](https://img.shields.io/badge/Type-Agent%20Skill-blue.svg)]()
-[![Failure patterns: 24](https://img.shields.io/badge/失败模式-24-brightgreen.svg)]()
+[![Failure patterns: 25](https://img.shields.io/badge/失败模式-25-brightgreen.svg)]()
 
 <br>
 
@@ -52,9 +52,9 @@ harness-check 专审用 prompt、markdown、脚本拼起来的 agent 框架。�
          fix:   加一条 Supervisor 规则「任一状态脚本非零 → 停下并上报」
 
 ✅ 可直接修（低风险）            🤔 要你拍板
-  N1 主流程文件写死了 Claude        M1 给状态脚本加"非零即停"硬检查
-  N2 压缩阈值对不上                    （动的是所有任务都流经的主流程，
-  N3 场景数多算了一个                    你来定，不会自动改）
+  L1 主流程文件写死了 Claude        M1 给状态脚本加"非零即停"硬检查
+  L2 压缩阈值对不上                    （动的是所有任务都流经的主流程，
+  L3 场景数多算了一个                    你来定，不会自动改）
 ```
 
 它不拿行号埋你。它告诉你 **哪条会静默断、哪些现在能安全修、哪些得你拍板**——反正框架是 AI 写的，你也不爱读它的代码。
@@ -75,13 +75,13 @@ git clone https://github.com/Zane456/harness-check.git ~/.claude/skills/harness-
 审查我的框架   ·   harness 体检   ·   框架可靠性   ·   review my agent framework
 ```
 
-命中这些说法就自动跑完整的六步审计。
+命中这些说法就自动跑完整的八步审计。
 
 ---
 
 ## 能查什么
 
-四个维度，**24 条已知失败模式**，每条都配一个"在磁盘上怎么实测"的具体手法：
+四个维度，**25 条已知失败模式**，每条都配一个"在磁盘上怎么实测"的具体手法：
 
 | 维度 | 这里会静默翻车的地方 |
 | :--- | :--- |
@@ -96,18 +96,20 @@ git clone https://github.com/Zane456/harness-check.git ~/.claude/skills/harness-
 
 ## 怎么工作
 
-六步。每步打一行可见的 `[harness-check] …`，确保没有哪步被静默跳过。
+八步。每步打一行可见的 `[harness-check] …`，确保没有哪步被静默跳过。
 
 ```
-0 发现机制 ─▶ 1 机械盘点 ─▶ 2 四维扫描 ─▶ 3 实测验证 ─▶ 4 输出报告 ─▶ 5 自检
+0 发现机制 ─▶ 1 机械盘点 ─▶ 2 四维扫描 ─▶ 2.5 走链路 ─▶ 3 实测验证 ─▶ 4 输出报告 ─▶ 5 自检 ─▶ 6 应用修复
 ```
 
-**0. 发现机制最先验** —— 框架活不活的命门：角色/skill/工具到底能不能被发现、被调起？查 glob、软链、清单完整性、命名一致性。
-**1. 机械盘点** —— 先把配置、规章、花名册、角色定义、脚本全读一遍，再下判断。
-**2. 四维扫描** —— 对照 24 条模式清单逐维找候选问题。
+**0. 发现机制最先验** —— 框架活不活的命门：角色/skill/工具到底能不能被发现、被调起？查 glob、软链、清单完整性、命名一致性，机械部分由 `scripts/check_discovery.py` 实测。
+**1. 机械盘点** —— 先把配置、规章、花名册、角色定义、脚本全读一遍再下判断，读过的文件数要和脚本打印的文件总数对账。
+**2. 四维扫描** —— 对照 25 条模式清单逐维找候选问题；可 grep 的部分（吞错、空配置、硬编码路径、只有 .example 的依赖）由 `scripts/check_mechanical.py` 实测，是否要紧由模型按上下文判。
+**2.5. 走链路** —— 挑一个典型任务沿真实链条走到底（触发 → 分派 → 执行 → 回报），再拿 1–2 个不该触发的任务测路由会不会误抓。
 **3. 实测验证** —— 铁律：*不实测不报。* 在磁盘上证明不了的，降级为"疑似"或剔除。
 **4. 输出报告** —— 结论 → 体检评分 → 代码层证据 → **✅ 可直接修** / **🤔 要你拍板**，最该看的两个静默断裂场景（触发侧 + 执行侧）折进对应条目里。报告走极简（lesstoken）、讲行为，不甩行号。
 **5. 自检** —— 每个文件都评过、每条问题都实测过、每个 where 都给到 `文件:行`。
+**6. 应用修复** —— 只在你明确说改之后动手：默认只改 🟢，🟡/🔴 逐条你拍板，改完重跑两个脚本证明修复落地。
 
 ---
 
@@ -128,11 +130,15 @@ git clone https://github.com/Zane456/harness-check.git ~/.claude/skills/harness-
 
 ```
 harness-check/
-├── SKILL.md                          # 方法论 —— 六步流程
+├── SKILL.md                          # 方法论 —— 八步流程
 ├── references/
-│   ├── failure-patterns.md           # 24 条模式 × 每条怎么实测
-│   ├── fix-risk-tiers.md             # 🟢/🟡/🔴 —— 每个修法的风险
-│   └── output-format.md              # 分层报告的形态
+│   ├── failure-patterns.md           # 25 条模式 × 每条怎么实测
+│   ├── fix-risk-tiers.md             # 🟢/🟡/🔴 —— 每个修法的风险 + 应用修复协议
+│   ├── output-format.md              # 分层报告的形态
+│   └── walkthrough.md                # 端到端走链路的做法
+├── scripts/
+│   ├── check_discovery.py            # 机械实测：软链、glob 覆盖、名字清单
+│   └── check_mechanical.py           # 机械实测：吞错/空配置/硬编码/只有 .example
 ├── assets/hero.png
 └── README.md
 ```
